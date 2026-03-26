@@ -6,8 +6,10 @@ import Select from "react-select";
 
 const Leads = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [editError, setEditError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [formData, setFormData] = useState({
     cp_id: "",
@@ -18,6 +20,18 @@ const Leads = () => {
     pitched_price: "",
     status: "Shared",
     lead_temperature: "Warm",
+  });
+  const [editData, setEditData] = useState({
+    id: "",
+    cp_id: "",
+    customer_name: "",
+    customer_phone: "",
+    customer_email: "",
+    base_price: "",
+    pitched_price: "",
+    status: "Shared",
+    lead_temperature: "Warm",
+    assigned_to: "",
   });
   const [channelPartners, setChannelPartners] = useState([]);
   const [salesUsers, setSalesUsers] = useState([]);
@@ -90,6 +104,11 @@ const Leads = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleEditChange = (event) => {
+    const { name, value } = event.target;
+    setEditData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const cpOptions = useMemo(
     () =>
       channelPartners.map((cp) => {
@@ -129,6 +148,8 @@ const Leads = () => {
 
   const selectedCpOption =
     cpOptions.find((option) => String(option.value) === String(formData.cp_id)) || null;
+  const selectedEditCpOption =
+    cpOptions.find((option) => String(option.value) === String(editData.cp_id)) || null;
 
   const salesUserOptions = useMemo(
     () =>
@@ -146,6 +167,9 @@ const Leads = () => {
       }),
     [salesUsers]
   );
+
+  const selectedEditAssignedOption =
+    salesUserOptions.find((option) => String(option.value) === String(editData.assigned_to)) || null;
 
   const handleAddSubmit = async (event) => {
     event.preventDefault();
@@ -194,6 +218,51 @@ const Leads = () => {
     }
   };
 
+  const handleEdit = (row) => {
+    setEditError("");
+    setEditData({
+      id: row?.id ?? "",
+      cp_id: row?.cp_id ?? "",
+      customer_name: row?.customer_name ?? "",
+      customer_phone: row?.customer_phone ?? "",
+      customer_email: row?.customer_email ?? "",
+      base_price: row?.base_price ?? "",
+      pitched_price: row?.pitched_price ?? "",
+      status: row?.status ?? "Shared",
+      lead_temperature: row?.lead_temperature ?? "Warm",
+      assigned_to: row?.assigned_to ?? "",
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+    setEditError("");
+    if (!editData.id) {
+      setEditError("Unable to determine lead id.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiBase}/api/leads/${editData.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(editData),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to update lead");
+      }
+      setIsEditOpen(false);
+      setRefreshKey((prev) => prev + 1);
+    } catch (error) {
+      setEditError("Unable to update lead. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <AdminLayout title="Leads" subtitle="All lead records from the database">
       <DataTable
@@ -201,6 +270,7 @@ const Leads = () => {
         endpoint="/api/leads"
         onAdd={() => setIsAddOpen(true)}
         addLabel="Add New Lead"
+        onEdit={handleEdit}
         columns={[
           "customer_name",
           "customer_phone",
@@ -248,7 +318,7 @@ const Leads = () => {
         editSelectOptions={{
           assigned_to: salesUserOptions,
         }}
-        viewExclude={["id", "typology_id", "created_at", "project_id"]}
+        viewExclude={["id", "typology_id", "created_at", "project_id", "assigned_to_name"]}
         refreshKey={refreshKey}
       />
 
@@ -359,6 +429,149 @@ const Leads = () => {
             name="lead_temperature"
             value={formData.lead_temperature}
             onChange={handleInputChange}
+          >
+            <option value="Hot">Hot</option>
+            <option value="Warm">Warm</option>
+            <option value="Cold">Cold</option>
+          </select>
+        </label>
+      </DataFormModal>
+
+      <DataFormModal
+        title="Edit Lead"
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSubmit={handleEditSubmit}
+        saving={saving}
+        error={editError}
+        submitLabel="Update Lead"
+      >
+        <label>
+          Channel Partner
+          <Select
+            classNamePrefix="cp-select"
+            className="cp-select"
+            placeholder="Type name (e.g., Rushis - 12)"
+            options={cpOptions}
+            value={selectedEditCpOption}
+            onChange={(option) =>
+              setEditData((prev) => ({
+                ...prev,
+                cp_id: option ? String(option.value) : "",
+              }))
+            }
+            isClearable
+            menuPortalTarget={menuPortalTarget}
+            menuPosition="fixed"
+            menuPlacement="auto"
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 2000 }),
+              menu: (base) => ({
+                ...base,
+                zIndex: 2000,
+                backgroundColor: "#ffffff",
+              }),
+            }}
+          />
+        </label>
+        <label>
+          Assigned To
+          <Select
+            classNamePrefix="edit-select"
+            className="edit-select"
+            placeholder="Select sales user"
+            options={salesUserOptions}
+            value={selectedEditAssignedOption}
+            onChange={(option) =>
+              setEditData((prev) => ({
+                ...prev,
+                assigned_to: option ? String(option.value) : "",
+              }))
+            }
+            isClearable
+            menuPortalTarget={menuPortalTarget}
+            menuPosition="fixed"
+            menuPlacement="auto"
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 2000 }),
+              menu: (base) => ({
+                ...base,
+                zIndex: 2000,
+                backgroundColor: "#ffffff",
+              }),
+            }}
+          />
+        </label>
+        <label>
+          Customer Name *
+          <input
+            type="text"
+            name="customer_name"
+            value={editData.customer_name}
+            onChange={handleEditChange}
+            required
+          />
+        </label>
+        <label>
+          Phone *
+          <input
+            type="text"
+            name="customer_phone"
+            value={editData.customer_phone}
+            onChange={handleEditChange}
+            required
+          />
+        </label>
+        <label>
+          Email *
+          <input
+            type="email"
+            name="customer_email"
+            value={editData.customer_email}
+            onChange={handleEditChange}
+            required
+          />
+        </label>
+        <label>
+          Base Price
+          <input
+            type="number"
+            name="base_price"
+            value={editData.base_price}
+            onChange={handleEditChange}
+            step="0.01"
+          />
+        </label>
+        <label>
+          Pitched Price
+          <input
+            type="number"
+            name="pitched_price"
+            value={editData.pitched_price}
+            onChange={handleEditChange}
+            step="0.01"
+          />
+        </label>
+        <label>
+          Status
+          <select
+            name="status"
+            value={editData.status}
+            onChange={handleEditChange}
+          >
+            <option value="Shared">Shared</option>
+            <option value="Site Visit">Site Visit</option>
+            <option value="Negotiation">Negotiation</option>
+            <option value="Booked">Booked</option>
+            <option value="Lost">Lost</option>
+          </select>
+        </label>
+        <label>
+          Lead Temperature
+          <select
+            name="lead_temperature"
+            value={editData.lead_temperature}
+            onChange={handleEditChange}
           >
             <option value="Hot">Hot</option>
             <option value="Warm">Warm</option>

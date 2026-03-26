@@ -3,6 +3,8 @@
   border-radius: 16px;
   box-shadow: var(--shadow-soft);
   padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
 }
 
 .data-card-header h2 {
@@ -25,8 +27,38 @@
   font-size: 12px;
 }
 
+.data-state.loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.data-loader-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(248, 250, 252, 0.8);
+  z-index: 2;
+}
+
+.data-spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-top-color: rgba(59, 130, 246, 0.8);
+  animation: data-spin 0.9s linear infinite;
+}
+
 .data-state.error {
   color: var(--color-accent);
+}
+
+@keyframes data-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .data-table {
@@ -353,6 +385,16 @@
   gap: 12px 16px;
 }
 
+.data-form-grid .field-span {
+  grid-column: 1 / -1;
+}
+
+.data-form-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .data-form label {
   display: flex;
   flex-direction: column;
@@ -391,6 +433,8 @@
   padding: 8px 10px;
   min-height: 38px;
   background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-soft);
 }
 
 .data-form input[type="file"]::file-selector-button {
@@ -403,6 +447,65 @@
   font-weight: 600;
   margin-right: 10px;
   cursor: pointer;
+}
+
+.data-form-grid .action-btn {
+  width: fit-content;
+}
+
+.data-form-grid .data-form-error {
+  margin-top: 0;
+}
+
+.data-form-grid .upload-actions {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  background: #f8fafc;
+}
+
+.data-form-grid .upload-actions .action-btn {
+  align-self: flex-start;
+}
+
+.data-form-grid .upload-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.data-form-grid .upload-row .upload-actions {
+  padding: 6px 10px;
+}
+
+.data-form-grid .upload-block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  background: #f8fafc;
+}
+
+.data-form-grid .upload-preview .data-view-key {
+  margin-bottom: 8px;
+}
+
+.data-form-grid .upload-preview .data-form-error {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .data-form-grid .upload-row {
+    grid-template-columns: 1fr;
+  }
+
+  .data-form-grid .upload-block {
+    grid-template-columns: 1fr;
+  }
 }
 
 .cp-select__control {

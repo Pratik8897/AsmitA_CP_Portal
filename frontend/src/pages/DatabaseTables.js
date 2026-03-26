@@ -55,7 +55,10 @@ const DatabaseTables = () => {
   return (
     <AdminLayout title="Database Tables" subtitle="Testing view for all tables">
       {loading ? (
-        <div className="data-state">Loading tables...</div>
+        <div className="data-state loader">
+          <span className="data-spinner" aria-hidden="true" />
+          Loading tables...
+        </div>
       ) : error ? (
         <div className="data-state error">{error}</div>
       ) : tables.length === 0 ? (

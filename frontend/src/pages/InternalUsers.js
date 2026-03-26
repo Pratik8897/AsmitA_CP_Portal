@@ -5,11 +5,25 @@ import DataFormModal from "../components/DataFormModal";
 
 const InternalUsers = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [formError, setFormError] = useState("");
+  const [editError, setEditError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [enumOptions, setEnumOptions] = useState({});
   const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "",
+    designation: "",
+    department: "",
+    is_active: "1",
+    password_hash: "",
+  });
+  const [editData, setEditData] = useState({
+    id: "",
     name: "",
     email: "",
     phone: "",
@@ -53,6 +67,11 @@ const InternalUsers = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleEditChange = (event) => {
+    const { name, value } = event.target;
+    setEditData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const resetForm = () => {
     setSaving(false);
     setFormError("");
@@ -66,6 +85,22 @@ const InternalUsers = () => {
       is_active: "1",
       password_hash: "",
     });
+  };
+
+  const handleEdit = (row) => {
+    setEditError("");
+    setEditData({
+      id: row?.id ?? "",
+      name: row?.name ?? "",
+      email: row?.email ?? "",
+      phone: row?.phone ?? "",
+      role: row?.role ?? "",
+      designation: row?.designation ?? "",
+      department: row?.department ?? "",
+      is_active: String(row?.is_active ?? "1"),
+      password_hash: "",
+    });
+    setIsEditOpen(true);
   };
 
   const handleAddSubmit = async (event) => {
@@ -102,6 +137,40 @@ const InternalUsers = () => {
     }
   };
 
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+    setEditError("");
+
+    if (!editData.id) {
+      setEditError("Unable to determine user id.");
+      return;
+    }
+
+    setSavingEdit(true);
+    try {
+      const payload = { ...editData };
+      delete payload.id;
+      if (!payload.password_hash) {
+        delete payload.password_hash;
+      }
+      const res = await fetch(`${apiBase}/api/internal-users/${editData.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to update internal user");
+      }
+      setIsEditOpen(false);
+      setRefreshKey((prev) => prev + 1);
+    } catch (error) {
+      setEditError("Unable to update internal user. Please try again.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   return (
     <AdminLayout title="User Management" subtitle="All internal user records">
       <DataTable
@@ -112,6 +181,7 @@ const InternalUsers = () => {
           setIsAddOpen(true);
         }}
         addLabel="Add New User"
+        onEdit={handleEdit}
         columns={["name", "email", "phone", "role", "is_active"]}
         columnLabels={{
           name: "Name",
@@ -239,6 +309,120 @@ const InternalUsers = () => {
             value={formData.password_hash}
             onChange={handleInputChange}
             placeholder="Enter password"
+          />
+        </label>
+      </DataFormModal>
+
+      <DataFormModal
+        title="Edit Internal User"
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSubmit={handleEditSubmit}
+        saving={savingEdit}
+        error={editError}
+        submitLabel="Update User"
+      >
+        <label>
+          Name *
+          <input
+            type="text"
+            name="name"
+            value={editData.name}
+            onChange={handleEditChange}
+            required
+          />
+        </label>
+        <label>
+          Email *
+          <input
+            type="email"
+            name="email"
+            value={editData.email}
+            onChange={handleEditChange}
+            required
+          />
+        </label>
+        <label>
+          Phone
+          <input
+            type="text"
+            name="phone"
+            value={editData.phone}
+            onChange={handleEditChange}
+          />
+        </label>
+        <label>
+          Role
+          {Array.isArray(enumOptions?.role) && enumOptions.role.length ? (
+            <select name="role" value={editData.role} onChange={handleEditChange}>
+              <option value="">Select</option>
+              {enumOptions.role.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              name="role"
+              value={editData.role}
+              onChange={handleEditChange}
+            />
+          )}
+        </label>
+        <label>
+          Designation
+          <input
+            type="text"
+            name="designation"
+            value={editData.designation}
+            onChange={handleEditChange}
+          />
+        </label>
+        <label>
+          Department
+          {Array.isArray(enumOptions?.department) && enumOptions.department.length ? (
+            <select
+              name="department"
+              value={editData.department}
+              onChange={handleEditChange}
+            >
+              <option value="">Select</option>
+              {enumOptions.department.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              name="department"
+              value={editData.department}
+              onChange={handleEditChange}
+            />
+          )}
+        </label>
+        <label>
+          Active
+          <select
+            name="is_active"
+            value={editData.is_active}
+            onChange={handleEditChange}
+          >
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+          </select>
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            name="password_hash"
+            value={editData.password_hash}
+            onChange={handleEditChange}
+            placeholder="Leave blank to keep current password"
           />
         </label>
       </DataFormModal>

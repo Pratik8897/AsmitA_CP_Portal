@@ -99,15 +99,44 @@ const DashboardHome = () => {
     [leads]
   );
 
-  const activityPulse = [
-    { label: "Mon", value: 14 },
-    { label: "Tue", value: 32 },
-    { label: "Wed", value: 10 },
-    { label: "Thu", value: 28 },
-    { label: "Fri", value: 40 },
-    { label: "Sat", value: 22 },
-    { label: "Sun", value: 16 },
-  ];
+  const activityPulse = useMemo(() => {
+    const sourceRows = Array.isArray(activities) && activities.length ? activities : leads;
+    const today = new Date();
+    const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const buckets = [];
+
+    for (let i = 6; i >= 0; i -= 1) {
+      const d = new Date(today);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - i);
+      buckets.push({ date: d, label: labels[d.getDay()], count: 0 });
+    }
+
+    const start = buckets[0].date;
+    const end = new Date(today);
+    end.setHours(23, 59, 59, 999);
+
+    sourceRows.forEach((row) => {
+      const raw =
+        row?.activity_at ||
+        row?.logged_at ||
+        row?.created_at ||
+        row?.updated_at;
+      if (!raw) return;
+      const when = new Date(raw);
+      if (Number.isNaN(when.getTime())) return;
+      if (when < start || when > end) return;
+      const key = when.toDateString();
+      const bucket = buckets.find((item) => item.date.toDateString() === key);
+      if (bucket) bucket.count += 1;
+    });
+
+    const max = Math.max(...buckets.map((b) => b.count), 1);
+    return buckets.map((bucket) => ({
+      label: bucket.label,
+      value: Math.round((bucket.count / max) * 100),
+    }));
+  }, [activities, leads]);
 
   const donutStats = [
     { label: "New Leads", value: 38, color: "#1e4bd1" },
@@ -189,7 +218,7 @@ const DashboardHome = () => {
                 <div key={item.label} className="bar-item">
                   <div
                     className="bar-fill"
-                    style={{ height: `${item.value}%` }}
+                    style={{ height: `${Math.max(item.value, 12)}%` }}
                   />
                   <span>{item.label}</span>
                 </div>

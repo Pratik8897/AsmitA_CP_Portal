@@ -2,7 +2,14 @@ const pool = require("../config/db");
 
 const fetchAll = async (table, limit = 200) => {
   const safeLimit = Math.min(Number(limit) || 200, 500);
-  const [rows] = await pool.query(`SELECT * FROM \`${table}\` LIMIT ?`, [safeLimit]);
+  const tableColumns = await fetchTableColumns(table);
+  const hasIsDeleted = tableColumns.includes("is_deleted");
+  const [rows] = await pool.query(
+    hasIsDeleted
+      ? `SELECT * FROM \`${table}\` WHERE \`is_deleted\` = 0 OR \`is_deleted\` IS NULL LIMIT ?`
+      : `SELECT * FROM \`${table}\` LIMIT ?`,
+    [safeLimit]
+  );
   return rows;
 };
 
@@ -62,6 +69,7 @@ const fetchOneById = async (table, id) => {
 const fetchAllWithFilters = async (table, filters = [], limit = 200) => {
   const safeLimit = Math.min(Number(limit) || 200, 500);
   const tableColumns = await fetchTableColumns(table);
+  const hasIsDeleted = tableColumns.includes("is_deleted");
   const usableFilters = (filters || []).filter(
     (filter) =>
       filter &&
@@ -70,12 +78,16 @@ const fetchAllWithFilters = async (table, filters = [], limit = 200) => {
       tableColumns.includes(filter.column)
   );
 
-  if (!usableFilters.length) {
+  if (!usableFilters.length && !hasIsDeleted) {
     return fetchAll(table, safeLimit);
   }
 
-  const whereClause = usableFilters.map((filter) => `\`${filter.column}\` = ?`).join(" AND ");
+  const whereParts = usableFilters.map((filter) => `\`${filter.column}\` = ?`);
   const values = usableFilters.map((filter) => filter.value);
+  if (hasIsDeleted) {
+    whereParts.push("(`is_deleted` = 0 OR `is_deleted` IS NULL)");
+  }
+  const whereClause = whereParts.join(" AND ");
   const [rows] = await pool.query(
     `SELECT * FROM \`${table}\` WHERE ${whereClause} LIMIT ?`,
     [...values, safeLimit]
@@ -129,6 +141,21 @@ const updateOne = async (table, id, data, allowedFields = []) => {
   return result;
 };
 
+const deleteOne = async (table, id) => {
+  const tableColumns = await fetchTableColumns(table);
+  if (!tableColumns.length) {
+    throw new Error("Table not found");
+  }
+  if (!tableColumns.includes("is_deleted")) {
+    throw new Error("Soft delete not supported");
+  }
+  const [result] = await pool.query(
+    `UPDATE \`${table}\` SET \`is_deleted\` = 1 WHERE \`id\` = ?`,
+    [id]
+  );
+  return result;
+};
+
 module.exports = {
   fetchAll,
   listTables,
@@ -139,4 +166,5 @@ module.exports = {
   fetchAllWithFilters,
   insertOne,
   updateOne,
+  deleteOne,
 };

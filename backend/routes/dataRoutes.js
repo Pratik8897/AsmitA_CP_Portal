@@ -12,12 +12,14 @@ const {
   fetchTableColumns,
   fetchEnumColumns,
   fetchOneById,
+  deleteOne,
 } = require("../controllers/genericController");
 const tables = require("../config/tables");
 const {
   ACTION_CREATE,
   ACTION_READ,
   ACTION_UPDATE,
+  ACTION_DELETE,
   authorize,
   authorizeParam,
   getLeadOwnershipFilter,
@@ -256,6 +258,28 @@ router.put("/:resource/:id/deactivate", authorizeParam("resource", ACTION_UPDATE
   }
 });
 
+router.delete("/:resource/:id", authorizeParam("resource", ACTION_DELETE), async (req, res) => {
+  try {
+    const resource = req.params.resource;
+    const table = resourceToTable[resource];
+    const id = Number(req.params.id);
+    if (!table || !id) {
+      return res.status(400).json({ error: "Invalid resource or id" });
+    }
+
+    const result = await deleteOne(table, id);
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+    return res.json({ status: "ok" });
+  } catch (error) {
+    if (error?.message === "Soft delete not supported") {
+      return res.status(400).json({ error: "Soft delete not supported for this resource" });
+    }
+    res.status(500).json({ error: "Failed to delete record" });
+  }
+});
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabaseBucket = process.env.SUPABASE_BUCKET || "channel-partners";
@@ -410,13 +434,17 @@ router.post("/leads", authorize("leads", ACTION_CREATE), async (req, res) => {
       }
     });
 
+    const leadColumns = await fetchTableColumns(tables.leads);
+    if (leadColumns.includes("created_at") && !payload.created_at) {
+      payload.created_at = formatNowForMySQL();
+    }
+
     if (req.access?.scope === "own") {
       const filter = getLeadOwnershipFilter(req.access.role, req.session?.user?.id);
       if (!filter) {
         return res.status(403).json({ error: "Forbidden" });
       }
-      const columns = await fetchTableColumns(tables.leads);
-      if (!columns.includes(filter.column)) {
+      if (!leadColumns.includes(filter.column)) {
         return res.status(403).json({ error: "Forbidden" });
       }
       payload = applyLeadOwnershipToPayload(req.access.role, req.session?.user?.id, payload);
@@ -678,12 +706,83 @@ router.post("/projects", authorize("projects", ACTION_CREATE), async (req, res) 
   }
 });
 
+router.get("/wings", authorize("wings", ACTION_READ), async (req, res) => {
+  try {
+    const data = await fetchAll(tables.wings, req.query.limit);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch wings" });
+  }
+});
+
+router.post("/wings", authorize("wings", ACTION_CREATE), async (req, res) => {
+  try {
+    const payload = { ...req.body };
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === "") {
+        payload[key] = null;
+      }
+    });
+
+    const allowedFields = await fetchTableColumns(tables.wings);
+    const result = await insertOne(tables.wings, payload, allowedFields);
+    res.status(201).json({ id: result.insertId });
+  } catch (error) {
+    const message = error?.message === "No valid fields provided" ? error.message : "Failed to create wing";
+    res.status(message === error.message ? 400 : 500).json({ error: message });
+  }
+});
+
 router.get("/units", authorize("units", ACTION_READ), async (req, res) => {
   try {
     const data = await fetchAll(tables.units, req.query.limit);
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch units" });
+  }
+});
+
+router.post("/units", authorize("units", ACTION_CREATE), async (req, res) => {
+  try {
+    const payload = { ...req.body };
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === "") {
+        payload[key] = null;
+      }
+    });
+
+    const allowedFields = await fetchTableColumns(tables.units);
+    const result = await insertOne(tables.units, payload, allowedFields);
+    res.status(201).json({ id: result.insertId });
+  } catch (error) {
+    const message = error?.message === "No valid fields provided" ? error.message : "Failed to create unit";
+    res.status(message === error.message ? 400 : 500).json({ error: message });
+  }
+});
+
+router.put("/units/:id", authorize("units", ACTION_UPDATE), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) {
+      return res.status(400).json({ error: "Invalid unit id" });
+    }
+
+    const payload = { ...req.body };
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === "") {
+        payload[key] = null;
+      }
+    });
+
+    const allowedFields = await fetchTableColumns(tables.units);
+    const result = await updateOne(tables.units, id, payload, allowedFields);
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: "Unit not found" });
+    }
+    return res.json({ status: "ok" });
+  } catch (error) {
+    const message = error?.message === "No valid fields provided" ? error.message : "Failed to update unit";
+    res.status(message === error.message ? 400 : 500).json({ error: message });
   }
 });
 

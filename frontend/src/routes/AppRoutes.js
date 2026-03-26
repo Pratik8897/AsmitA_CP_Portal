@@ -6,6 +6,8 @@ import DatabaseTables from "../pages/DatabaseTables";
 import ChannelPartners from "../pages/ChannelPartners";
 import ProjectsWings from "../pages/ProjectsWings";
 import Units from "../pages/Units";
+import PropertyDashboard from "../pages/PropertyDashboard";
+import UnitSlots from "../pages/UnitSlots";
 import Commissions from "../pages/Commissions";
 import LeadActivities from "../pages/LeadActivities";
 import LeadPaymentMilestones from "../pages/LeadPaymentMilestones";
@@ -100,6 +102,22 @@ const AppRoutes = () => {
           element={
             <RequireAuth>
               <ProjectsWings />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/property-dashboard"
+          element={
+            <RequireAuth>
+              <PropertyDashboard />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/unit-slots"
+          element={
+            <RequireAuth>
+              <UnitSlots />
             </RequireAuth>
           }
         />
