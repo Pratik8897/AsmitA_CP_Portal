@@ -1,0 +1,205 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap");
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background: var(--color-surface);
+  font-family: "Montserrat", "Segoe UI", sans-serif;
+}
+
+.login-card {
+  width: min(100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 38% 62%;
+  min-height: 100vh;
+  background: var(--color-surface);
+}
+
+.login-brand {
+  background: var(--color-dark-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+.brand-mark {
+  text-align: center;
+  color: var(--color-on-dark);
+}
+
+.brand-mark img {
+  width: 140px;
+  height: auto;
+  filter: brightness(0) invert(1);
+  margin-bottom: 16px;
+}
+
+.brand-text {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.login-panel {
+  background: var(--color-light-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 72px 84px;
+  position: relative;
+}
+
+.login-close {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+}
+
+.login-header h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  color: var(--color-text);
+}
+
+.login-header p {
+  margin: 0 0 32px;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.login-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-bottom: 8px;
+}
+
+.login-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-input:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.login-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: transparent;
+}
+
+.login-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+}
+
+.login-icon.email {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%239196a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4h16v16H4z'/><path d='m4 4 8 7 8-7'/></svg>");
+}
+
+.login-icon.lock {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%239196a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='11' width='16' height='9' rx='2'/><path d='M8 11V7a4 4 0 0 1 8 0v4'/></svg>");
+}
+
+.login-input.with-action input {
+  padding-right: 8px;
+}
+
+.login-action {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239196a3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z'/><circle cx='12' cy='12' r='3'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.7;
+}
+
+.login-forgot {
+  border: none;
+  background: none;
+  color: var(--color-dark-bg);
+  font-size: 12px;
+  text-align: right;
+  margin: -8px 0 28px;
+  cursor: pointer;
+}
+
+.login-submit {
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-on-dark);
+  padding: 12px 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.login-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  margin-top: 40px;
+  font-size: 11px;
+  color: var(--color-muted-light);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .login-card {
+    grid-template-columns: 1fr;
+  }
+
+  .login-brand {
+    min-height: 280px;
+  }
+
+  .login-panel {
+    padding: 48px 32px 64px;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-panel {
+    padding: 36px 20px 48px;
+  }
+
+  .brand-text {
+    font-size: 22px;
+  }
+}

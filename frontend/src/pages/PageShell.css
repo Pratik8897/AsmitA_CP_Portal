@@ -1,0 +1,22 @@
+.cp-page-shell {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+}
+
+.cp-page-card {
+  background: var(--color-surface);
+  padding: 28px 32px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+}
+
+.cp-page-card h2 {
+  margin: 0 0 8px;
+}
+
+.cp-page-card p {
+  margin: 0;
+  color: var(--color-muted);
+}

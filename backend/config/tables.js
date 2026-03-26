@@ -1,0 +1,16 @@
+module.exports = {
+  leads: "leads",
+  channelPartners: "channel_partners",
+  projectsWings: "projects",
+  projects: "projects",
+  wings: "wings",
+  units: "units",
+  commissions: "commissions",
+  leadActivities: "lead_activities",
+  leadPaymentMilestones: "lead_payment_milestones",
+  paymentMilestones: "payment_milestones",
+  paymentPlans: "payment_plans",
+  supportTickets: "support_tickets",
+  systemLogs: "system_logs",
+  internalUsers: "internal_users",
+};
